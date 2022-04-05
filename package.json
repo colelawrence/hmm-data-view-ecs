@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@theatre/core": "file:./theatre"
+  },
+  "devDependencies": {
+    "@theatre/studio": "^0.4.7"
+  }
+}

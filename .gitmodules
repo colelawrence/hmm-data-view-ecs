@@ -1,0 +1,3 @@
+[submodule "theatre"]
+	path = theatre
+	url = https://github.com/theatre-js/theatre.git
