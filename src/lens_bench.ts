@@ -1,4 +1,5 @@
 import { createValueLens, typs } from "./createValueLens.ts";
+
 /*
 Initial run:
 
@@ -17,10 +18,72 @@ bench array read packed ... 1000 iterations 10,154 ns/iter (8,000..464,917 ns/it
 bench result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out (378ms)
 */
 
+// type EntityId = number
+
+// const storages = new Map<{ new(): any }, Map<EntityId, any>>()
+
+// function getEntities<C extends { new(...args: any[]): any }>(c: C): C extends { new(...args: any[]): infer R } ? R[] : never {
+//   return Array.from(storages.get(c)?.values() ?? []) as any
+// }
+
+// class Position {
+//   constructor(
+//     public readonly x: number,
+//     public readonly y: number,
+//   ) {}
+// }
+// class Aggression {
+//   constructor(
+//     public readonly towards?: EntityId,
+//   ) {}
+// }
+
+// type Pos = {
+//   x: number,
+//   y: number
+// }
+
+// const es0 = getEntities<Pos>()
+// const es1 = getEntities(Position)
+// const es2 = getEntities({ pos: Position, aggression: Aggression }) // { pos, aggression }[]
+
 const rgb = createValueLens({
   r: typs.u32,
   g: typs.u32,
   b: typs.u32,
+});
+
+const rgbf = createValueLens({
+  r: typs.f32,
+  g: typs.f32,
+  b: typs.f32,
+});
+
+const point2d = createValueLens({
+  x: typs.u32,
+  y: typs.u32,
+});
+
+const ab0 = new ArrayBuffer(100024);
+const dv0 = new DataView(ab0);
+
+Deno.bench("lens write (point2d)", () => {
+  for (let i = 0; i < 1000; i++) {
+    point2d.write(dv0, i, i, {
+      x: i * 2,
+      y: i * 3,
+    });
+  }
+});
+
+Deno.bench("lens read (point2d)", () => {
+  for (let i = 0; i < 1000; i++) {
+    const {
+      $,
+      v: { x, y },
+    } = point2d.read(dv0, i);
+    const total = $ + x + y;
+  }
 });
 
 const ab = new ArrayBuffer(100024);
@@ -46,6 +109,26 @@ Deno.bench("lens read", () => {
   }
 });
 
+Deno.bench("lens write (f32)", () => {
+  for (let i = 0; i < 1000; i++) {
+    rgbf.write(dv, i, i, {
+      r: i * 2,
+      g: i * 3,
+      b: i * 4,
+    });
+  }
+});
+
+Deno.bench("lens read (f32)", () => {
+  for (let i = 0; i < 1000; i++) {
+    const {
+      $,
+      v: { r, g, b },
+    } = rgbf.read(dv, i);
+    const total = $ + r + g + b;
+  }
+});
+
 const arr = new Array(1000);
 Deno.bench("array write", () => {
   for (let i = 0; i < 1000; i++) {
@@ -59,6 +142,35 @@ Deno.bench("array write", () => {
     };
   }
 });
+for (let N = 0; N < 10; N++) {
+  Deno.bench(`lens write (${N}x)`, () => {
+    for (let n = 0; n < N; n++) {
+      for (let i = 0; i < 1000; i++) {
+        rgb.write(dv, i, i + N, {
+          r: i * 2 + N,
+          g: i * 3 + N,
+          b: i * 4 + N,
+        });
+      }
+    }
+  });
+}
+for (let N = 0; N < 10; N++) {
+  Deno.bench(`array write (${N}x)`, () => {
+    for (let n = 0; n < N; n++) {
+      for (let i = 0; i < 1000; i++) {
+        arr[i] = {
+          $: i + N,
+          v: {
+            r: i * 2 + N,
+            g: i * 3 + N,
+            b: i * 4 + N,
+          },
+        };
+      }
+    }
+  });
+}
 
 Deno.bench("array read", () => {
   for (let i = 0; i < 1000; i++) {

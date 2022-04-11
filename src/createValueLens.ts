@@ -16,7 +16,7 @@ function createValueReaderRGB(obj: {
   g: number;
   b: number;
 } {
-  const SIZE = obj.r.bytes + obj.g.bytes + obj.b.bytes;
+  const SIZE = 4 + obj.r.bytes + obj.g.bytes + obj.b.bytes;
   let offset = 0;
   // const $_OFFSET = offset
   offset += 4; // $
